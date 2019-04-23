@@ -88,7 +88,7 @@ class Mysql
     public function verifyType($type)
     {
         if (!\in_array($type, $this->supportedVersions())) {
-            throw new DomainException('Invalid Mysql type given. Available: mysql@5.7/mariadb');
+            throw new DomainException('Invalid Mysql type given. Available: mysql@5.7/mariadb/percona-server');
         }
     }
 
@@ -99,7 +99,7 @@ class Mysql
      */
     public function supportedVersions()
     {
-        return ['mysql@5.7', 'mariadb'];
+        return ['mysql@5.7', 'mariadb', 'percona-server'];
     }
 
     /**
@@ -155,8 +155,13 @@ class Mysql
         }
 
         $contents = $this->files->get(__DIR__ . '/../stubs/my.cnf');
-        if ($type === 'mariadb') {
+        if ($type === 'mariadb' || $type === 'percona-server') {
             $contents = \str_replace('show_compatibility_56=ON', '', $contents);
+        }
+        if ($type === 'percona-server') {
+            $contents = \str_replace('query_cache_type=1', '', $contents);
+            $contents = \str_replace('query_cache_size=67108864', '', $contents);
+            $contents = \str_replace('query_cache_limit=4194304', '', $contents);
         }
 
         $this->files->putAsUser(
